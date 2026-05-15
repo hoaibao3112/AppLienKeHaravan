@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Haravan OAuth Connect</title>
+    <link rel="stylesheet" href="/public/style.css">
+  </head>
+  <body>
+    <main class="container">
+      <h1>Haravan OAuth Demo</h1>
+      <% if (typeof error !== 'undefined') { %>
+        <div class="error"><%= error %></div>
+      <% } %>
+      <form action="/connect" method="post">
+        <label>API Key
+          <input name="apiKey" value="<%= apiKey %>" required />
+        </label>
+        <label>Secret Key
+          <input name="secretKey" value="<%= secretKey %>" required />
+        </label>
+        <label>Shop (e.g. myshop.myharavan.com)
+          <input name="shop" value="<%= shop %>" placeholder="myshop.myharavan.com" required />
+        </label>
+        <label>Redirect URI
+          <input name="redirectUri" value="<%= redirectUri %>" />
+        </label>
+        <div class="actions">
+          <button type="submit">Connect</button>
+        </div>
+      </form>
+      <p class="note">Scopes: read_products, read_orders, read_customers</p>
+    </main>
+  </body>
+</html>

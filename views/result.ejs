@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Haravan OAuth Result</title>
+    <link rel="stylesheet" href="/public/style.css">
+  </head>
+  <body>
+    <main class="container">
+      <h1>OAuth Result</h1>
+      <% if (error) { %>
+        <div class="error"><strong>Error:</strong> <%= error %></div>
+      <% } else { %>
+        <section>
+          <h2>Access Token</h2>
+          <pre class="token"><%= accessToken %></pre>
+        </section>
+        <section>
+          <h2>Shop</h2>
+          <pre><%= JSON.stringify(shopInfo, null, 2) %></pre>
+        </section>
+      <% } %>
+      <% if (details) { %>
+        <section>
+          <h3>Details</h3>
+          <pre><%= JSON.stringify(details, null, 2) %></pre>
+        </section>
+      <% } %>
+      <p><a href="/">Back</a></p>
+    </main>
+  </body>
+</html>

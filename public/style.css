@@ -1,0 +1,10 @@
+body { font-family: system-ui, Arial, sans-serif; background:#f7f7f8; color:#222 }
+.container { max-width:720px; margin:40px auto; background:#fff; padding:24px; box-shadow:0 4px 14px rgba(0,0,0,.06); border-radius:8px }
+h1 { margin-top:0 }
+label { display:block; margin:12px 0 }
+input { width:100%; padding:8px 10px; font-size:14px; margin-top:6px; box-sizing:border-box }
+.actions { margin-top:14px }
+button { padding:10px 14px; background:#0066cc; color:#fff; border:none; border-radius:4px; cursor:pointer }
+.note { color:#666; margin-top:12px }
+.token { background:#f4f4f6; padding:8px; border-radius:4px }
+.error { background:#ffe6e6; color:#900; padding:8px; border-radius:4px }

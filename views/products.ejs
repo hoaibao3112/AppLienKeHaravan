@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sản phẩm – Haravan AI Writer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/public/style.css" />
+</head>
+<body class="app-page">
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="navbar-brand">
+      <span class="brand-icon-sm">✦</span>
+      <span>Haravan <strong>AI Writer</strong></span>
+    </div>
+    <div class="navbar-info">
+      <span class="shop-badge">🏪 <%= shop %></span>
+      <a href="/disconnect" class="btn btn-ghost btn-sm" id="logout-btn">Ngắt kết nối</a>
+    </div>
+  </header>
+
+  <main class="main-content">
+
+    <!-- Thông tin shop (nếu có) -->
+    <% if (shopInfo && shopInfo.name) { %>
+      <div class="shop-info-bar">
+        <% if (shopInfo.logo) { %><img src="<%= shopInfo.logo %>" class="shop-logo" alt="logo" /><% } %>
+        <div>
+          <strong><%= shopInfo.name %></strong>
+          <% if (shopInfo.email) { %><span class="shop-email"> · <%= shopInfo.email %></span><% } %>
+        </div>
+        <div class="shop-info-stats">
+          <span class="stat"><%= allCount %> sản phẩm</span>
+          <span class="stat warning"><%= noDescCount %> chưa có mô tả</span>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div>
+        <h2 class="page-title">Danh sách sản phẩm</h2>
+        <p class="page-sub">Chọn sản phẩm để generate mô tả bằng AI</p>
+      </div>
+      <div class="filter-tabs">
+        <a href="/products" class="filter-tab <%= filterNoDesc ? '' : 'active' %>" id="tab-all">
+          Tất cả <span class="badge-count"><%= allCount %></span>
+        </a>
+        <a href="/products?filter=no_desc" class="filter-tab <%= filterNoDesc ? 'active' : '' %>" id="tab-nodesc">
+          Chưa có mô tả <span class="badge-count warning"><%= noDescCount %></span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Lỗi -->
+    <% if (error === 'no_selection') { %>
+      <div class="alert alert-error mb-3">
+        <span class="alert-icon">⚠</span>
+        <span>Vui lòng chọn ít nhất 1 sản phẩm trước khi generate.</span>
+      </div>
+    <% } %>
+
+    <% if (products.length === 0) { %>
+      <div class="empty-state">
+        <div class="empty-icon">📦</div>
+        <h3><%= filterNoDesc ? 'Tất cả sản phẩm đã có mô tả!' : 'Chưa có sản phẩm nào.' %></h3>
+        <p><% if (filterNoDesc) { %><a href="/products">Xem tất cả sản phẩm</a><% } %></p>
+      </div>
+    <% } else { %>
+      <form id="gen-form" action="/generate" method="POST">
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <label class="checkbox-label">
+              <input type="checkbox" id="select-all" onchange="toggleAll(this)" />
+              <span class="checkmark"></span>
+              <span>Chọn tất cả</span>
+            </label>
+            <span class="selected-count" id="sel-count">0 đã chọn</span>
+          </div>
+          <button type="submit" id="gen-btn" class="btn btn-primary" disabled>
+            🤖 Generate mô tả AI
+          </button>
+        </div>
+
+        <!-- Bảng sản phẩm -->
+        <div class="products-table-wrap">
+          <table class="products-table">
+            <thead>
+              <tr>
+                <th class="col-check"></th>
+                <th class="col-thumb">Ảnh</th>
+                <th class="col-name">Tên sản phẩm</th>
+                <th class="col-type">Loại</th>
+                <th class="col-price">Giá từ</th>
+                <th class="col-status">Mô tả</th>
+                <th class="col-action">Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% products.forEach(function(p) { %>
+                <tr class="product-row <%= p.hasDescription ? '' : 'row-nodesc' %>" id="row-<%= p.id %>">
+
+                  <td class="col-check">
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="productIds" value="<%= p.id %>"
+                        class="product-checkbox" onchange="updateSel()" id="chk-<%= p.id %>" />
+                      <span class="checkmark"></span>
+                    </label>
+                  </td>
+
+                  <td class="col-thumb">
+                    <% if (p.thumbnail) { %>
+                      <img src="<%= p.thumbnail %>" alt="<%= p.title %>" class="product-thumb" loading="lazy" />
+                    <% } else { %>
+                      <div class="product-thumb-placeholder">📷</div>
+                    <% } %>
+                  </td>
+
+                  <td class="col-name">
+                    <label for="chk-<%= p.id %>" class="product-name-label">
+                      <span class="product-name"><%= p.title %></span>
+                      <% if (p.vendor) { %><span class="product-vendor"><%= p.vendor %></span><% } %>
+                    </label>
+                  </td>
+
+                  <td class="col-type">
+                    <span class="product-type"><%= p.product_type || '–' %></span>
+                  </td>
+
+                  <td class="col-price">
+                    <% if (p.minPrice) { %>
+                      <span class="product-price"><%= Number(p.minPrice).toLocaleString('vi-VN') %> ₫</span>
+                    <% } else { %>
+                      <span class="product-price muted">Liên hệ</span>
+                    <% } %>
+                  </td>
+
+                  <td class="col-status">
+                    <% if (p.hasDescription) { %>
+                      <span class="status-badge success">✓ Có mô tả</span>
+                    <% } else { %>
+                      <span class="status-badge warning">✗ Chưa có</span>
+                    <% } %>
+                  </td>
+
+                  <!-- Nút Generate nhanh cho 1 sản phẩm -->
+                  <td class="col-action">
+                    <button type="button" class="btn btn-ghost btn-sm"
+                      onclick="quickGenerate('<%= p.id %>')"
+                      title="Generate mô tả cho sản phẩm này">
+                      🤖 Generate
+                    </button>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Sticky bottom bar -->
+        <div class="sticky-actions">
+          <span class="selected-count" id="sel-count-bot">0 sản phẩm đã chọn</span>
+          <button type="submit" id="gen-btn-bot" class="btn btn-primary" disabled>
+            🤖 Generate mô tả AI
+          </button>
+        </div>
+
+        <!-- Hidden input cho quick generate 1 sản phẩm -->
+        <input type="hidden" id="quick-id" name="" value="" />
+      </form>
+    <% } %>
+  </main>
+
+  <script>
+    // Cập nhật số lượng đã chọn
+    function updateSel() {
+      const all     = document.querySelectorAll('.product-checkbox');
+      const checked = document.querySelectorAll('.product-checkbox:checked');
+      const n       = checked.length;
+
+      document.getElementById('sel-count').textContent     = n + ' đã chọn';
+      document.getElementById('sel-count-bot').textContent = n + ' sản phẩm đã chọn';
+
+      const dis = n === 0;
+      document.getElementById('gen-btn').disabled     = dis;
+      document.getElementById('gen-btn-bot').disabled = dis;
+
+      const sa = document.getElementById('select-all');
+      if (sa) {
+        sa.checked       = n === all.length && all.length > 0;
+        sa.indeterminate = n > 0 && n < all.length;
+      }
+    }
+
+    // Chọn / bỏ tất cả
+    function toggleAll(cb) {
+      document.querySelectorAll('.product-checkbox').forEach(c => c.checked = cb.checked);
+      updateSel();
+    }
+
+    // Generate nhanh 1 sản phẩm
+    function quickGenerate(id) {
+      // Bỏ chọn hết, chọn mình id này rồi submit
+      document.querySelectorAll('.product-checkbox').forEach(c => c.checked = false);
+      const chk = document.getElementById('chk-' + id);
+      if (chk) chk.checked = true;
+      updateSel();
+      document.getElementById('gen-form').submit();
+    }
+
+    // Loading khi submit
+    document.getElementById('gen-form').addEventListener('submit', function (e) {
+      const checked = document.querySelectorAll('.product-checkbox:checked');
+      if (checked.length === 0) { e.preventDefault(); return; }
+      ['gen-btn','gen-btn-bot'].forEach(id => {
+        const b = document.getElementById(id);
+        if (b) { b.disabled = true; b.textContent = '⏳ Đang generate...'; }
+      });
+    });
+
+    updateSel();
+  </script>
+</body>
+</html>

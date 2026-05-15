@@ -1,35 +1,126 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Haravan OAuth Connect</title>
-    <link rel="stylesheet" href="/public/style.css">
-  </head>
-  <body>
-    <main class="container">
-      <h1>Haravan OAuth Demo</h1>
-      <% if (typeof error !== 'undefined') { %>
-        <div class="error"><%= error %></div>
-      <% } %>
-      <form action="/connect" method="post">
-        <label>API Key
-          <input name="apiKey" value="<%= apiKey %>" required />
-        </label>
-        <label>Secret Key
-          <input name="secretKey" value="<%= secretKey %>" required />
-        </label>
-        <label>Shop (e.g. myshop.myharavan.com)
-          <input name="shop" value="<%= shop %>" placeholder="myshop.myharavan.com" required />
-        </label>
-        <label>Redirect URI
-          <input name="redirectUri" value="<%= redirectUri %>" />
-        </label>
-        <div class="actions">
-          <button type="submit">Connect</button>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Haravan AI Product Writer – Kết nối</title>
+  <meta name="description" content="Kết nối Haravan store bằng Private Token để generate mô tả sản phẩm chuẩn SEO bằng Claude AI." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/public/style.css" />
+</head>
+<body class="auth-page">
+
+  <div class="bg-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <div class="auth-container">
+    <!-- Brand -->
+    <div class="brand">
+      <div class="brand-icon">✦</div>
+      <div class="brand-text">
+        <h1>Haravan <span class="gradient-text">AI Writer</span></h1>
+        <p>Generate mô tả sản phẩm chuẩn SEO bằng Claude AI</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Kết nối bằng Private Token</h2>
+        <p class="card-sub">Không cần OAuth — nhập thẳng token từ Haravan admin</p>
+      </div>
+
+      <!-- Hướng dẫn lấy Private Token -->
+      <div class="info-box">
+        <strong>📌 Cách lấy Private Token:</strong>
+        <ol style="margin:.4rem 0 0 1.1rem;font-size:.82rem;line-height:1.8;">
+          <li>Vào <strong>Haravan Admin</strong> → <strong>Ứng dụng</strong></li>
+          <li>Chọn <strong>Manage private apps</strong></li>
+          <li>Tạo app mới → copy <strong>Password</strong> (chính là Private Token)</li>
+        </ol>
+      </div>
+
+      <!-- Thông báo lỗi -->
+      <% if (error) { %>
+        <div class="alert alert-error" style="margin-top:.75rem;">
+          <span class="alert-icon">⚠</span>
+          <span>
+            <% if (error === 'token_expired') { %>
+              Token hết hạn hoặc không hợp lệ. Vui lòng kết nối lại.
+            <% } else { %>
+              <%= error %>
+            <% } %>
+          </span>
         </div>
+      <% } %>
+
+      <form id="connect-form" action="/connect" method="POST" class="form" style="margin-top:1.1rem;">
+        <!-- Shop Domain -->
+        <div class="form-group">
+          <label for="shop">Shop Domain</label>
+          <div class="input-prefix">
+            <span>https://</span>
+            <input
+              type="text"
+              id="shop"
+              name="shop"
+              value="<%= shop %>"
+              placeholder="yourshop.myharavan.com"
+              required
+              autocomplete="off"
+            />
+          </div>
+          <small>Ví dụ: baohoai-dev.myharavan.com (không có dấu / cuối)</small>
+        </div>
+
+        <!-- Private Token -->
+        <div class="form-group">
+          <label for="privateToken">Private Token (Password)</label>
+          <div class="input-password">
+            <input
+              type="password"
+              id="privateToken"
+              name="privateToken"
+              placeholder="Dán Private Token vào đây..."
+              required
+              autocomplete="off"
+            />
+            <button type="button" class="toggle-pw" onclick="togglePw(this)" title="Hiện/Ẩn">👁</button>
+          </div>
+          <small>Token được lưu trong session, không lưu database, tự xoá sau 8 giờ</small>
+        </div>
+
+        <button type="submit" id="connect-btn" class="btn btn-primary btn-block">
+          <span class="btn-text">🔗 Kết nối Shop</span>
+          <span class="btn-loading hidden">⏳ Đang xác thực...</span>
+        </button>
       </form>
-      <p class="note">Scopes: read_products, read_orders, read_customers</p>
-    </main>
-  </body>
+    </div>
+
+    <!-- Features -->
+    <div class="features">
+      <div class="feature-item"><span class="feature-icon">🤖</span><span>Claude AI</span></div>
+      <div class="feature-item"><span class="feature-icon">🔒</span><span>Private Token</span></div>
+      <div class="feature-item"><span class="feature-icon">🔍</span><span>Chuẩn SEO</span></div>
+      <div class="feature-item"><span class="feature-icon">🚀</span><span>Push lên Haravan</span></div>
+    </div>
+  </div>
+
+  <script>
+    function togglePw(btn) {
+      const inp = document.getElementById('privateToken');
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+      btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+    }
+    document.getElementById('connect-form').addEventListener('submit', function () {
+      const btn = document.getElementById('connect-btn');
+      btn.querySelector('.btn-text').classList.add('hidden');
+      btn.querySelector('.btn-loading').classList.remove('hidden');
+      btn.disabled = true;
+    });
+  </script>
+</body>
 </html>

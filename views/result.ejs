@@ -1,33 +1,48 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Haravan OAuth Result</title>
-    <link rel="stylesheet" href="/public/style.css">
-  </head>
-  <body>
-    <main class="container">
-      <h1>OAuth Result</h1>
-      <% if (error) { %>
-        <div class="error"><strong>Error:</strong> <%= error %></div>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kết quả – Haravan AI Writer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/public/style.css" />
+</head>
+<body class="auth-page">
+  <div class="bg-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+  <div class="auth-container" style="max-width: 560px;">
+    <div class="brand">
+      <div class="brand-icon">✦</div>
+      <div class="brand-text">
+        <h1>Haravan <span class="gradient-text">AI Writer</span></h1>
+      </div>
+    </div>
+    <div class="card">
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="error-icon-big">⚠️</div>
+        <h2 class="error-title"><%= error %></h2>
+        <% if (typeof details !== 'undefined' && details) { %>
+          <pre class="error-details"><%= JSON.stringify(details, null, 2) %></pre>
+        <% } %>
+        <a href="/" class="btn btn-primary mt-2">← Quay lại</a>
       <% } else { %>
-        <section>
-          <h2>Access Token</h2>
-          <pre class="token"><%= accessToken %></pre>
-        </section>
-        <section>
-          <h2>Shop</h2>
-          <pre><%= JSON.stringify(shopInfo, null, 2) %></pre>
-        </section>
+        <div class="success-icon-big">✅</div>
+        <h2 class="success-title">Kết nối thành công!</h2>
+        <% if (typeof shop !== 'undefined' && shop) { %>
+          <p class="success-sub">Đã kết nối với store <strong><%= shop %></strong></p>
+        <% } %>
+        <% if (typeof accessToken !== 'undefined' && accessToken) { %>
+          <div class="token-display">
+            <small>Access Token (lưu nội bộ)</small>
+            <code><%= accessToken.substring(0, 20) %>...</code>
+          </div>
+        <% } %>
+        <a href="/products" class="btn btn-primary mt-2">📦 Xem danh sách sản phẩm</a>
       <% } %>
-      <% if (details) { %>
-        <section>
-          <h3>Details</h3>
-          <pre><%= JSON.stringify(details, null, 2) %></pre>
-        </section>
-      <% } %>
-      <p><a href="/">Back</a></p>
-    </main>
-  </body>
+    </div>
+  </div>
+</body>
 </html>

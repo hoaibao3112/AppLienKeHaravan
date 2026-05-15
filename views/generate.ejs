@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generate mô tả AI – Haravan AI Writer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/public/style.css" />
+</head>
+<body class="app-page">
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="navbar-brand">
+      <span class="brand-icon-sm">✦</span>
+      <span>Haravan <strong>AI Writer</strong></span>
+    </div>
+    <div class="navbar-info">
+      <span class="shop-badge">🏪 <%= shop %></span>
+      <a href="/products" class="btn btn-ghost btn-sm">← Danh sách</a>
+      <a href="/disconnect" class="btn btn-ghost btn-sm">Ngắt kết nối</a>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h2 class="page-title">Preview & Chỉnh sửa mô tả</h2>
+        <p class="page-sub">Xem lại, edit HTML rồi publish thẳng lên Haravan</p>
+      </div>
+      <button class="btn btn-primary" id="pub-all-btn" onclick="publishAll()">
+        🚀 Publish tất cả
+        (<span id="pub-all-count"><%= results.filter(r => r.status === 'success').length %></span>)
+      </button>
+    </div>
+
+    <!-- Thông báo tổng hợp -->
+    <div id="global-msg" class="alert hidden mb-3"></div>
+
+    <!-- Cards sản phẩm -->
+    <div class="generate-list">
+      <% results.forEach(function(r) { %>
+        <div class="gen-card" id="card-<%= r.id %>">
+
+          <!-- Header card -->
+          <div class="gen-card-header">
+            <div class="gen-card-info">
+              <% if (r.thumbnail) { %>
+                <img src="<%= r.thumbnail %>" alt="<%= r.title %>" class="gen-thumb" />
+              <% } else { %>
+                <div class="gen-thumb-placeholder">📷</div>
+              <% } %>
+              <div>
+                <h3 class="gen-product-title"><%= r.title %></h3>
+                <div id="status-<%= r.id %>">
+                  <% if (r.status === 'success') { %>
+                    <span class="status-badge success">✓ Đã generate</span>
+                  <% } else { %>
+                    <span class="status-badge error">✗ <%= r.error || 'Lỗi không xác định' %></span>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+            <div class="gen-card-actions">
+              <button class="btn btn-ghost btn-sm" id="regen-<%= r.id %>"
+                onclick="regenerate('<%= r.id %>')">🔄 Viết lại</button>
+              <button class="btn btn-success btn-sm" id="pub-<%= r.id %>"
+                onclick="publishOne('<%= r.id %>')"
+                <%= r.status !== 'success' ? 'disabled' : '' %>>🚀 Publish</button>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div class="gen-tabs">
+            <button class="gen-tab active" id="tab-prev-<%= r.id %>"
+              onclick="switchTab('<%= r.id %>','preview')">👁 Preview</button>
+            <button class="gen-tab" id="tab-edit-<%= r.id %>"
+              onclick="switchTab('<%= r.id %>','edit')">✏ Chỉnh sửa HTML</button>
+          </div>
+
+          <!-- Preview -->
+          <div class="gen-preview" id="prev-<%= r.id %>">
+            <% if (r.status === 'success') { %>
+              <%- r.description %>
+            <% } else { %>
+              <div class="error-placeholder">
+                <p>⚠ Không generate được: <strong><%= r.error %></strong></p>
+                <p>Nhấn <strong>Viết lại</strong> để thử lại.</p>
+              </div>
+            <% } %>
+          </div>
+
+          <!-- Editor HTML -->
+          <textarea class="gen-editor hidden" id="edit-<%= r.id %>"
+            oninput="syncPrev('<%= r.id %>')"
+            placeholder="HTML mô tả sản phẩm..."><%= r.description %></textarea>
+
+          <!-- Kết quả publish inline -->
+          <div class="publish-result hidden" id="pub-res-<%= r.id %>"></div>
+        </div>
+      <% }); %>
+    </div>
+
+    <div class="back-link" style="margin-top:2rem;">
+      <a href="/products" class="btn btn-ghost">← Quay lại danh sách</a>
+    </div>
+  </main>
+
+  <script>
+    // ── Tab switch ──────────────────────────────────────────
+    function switchTab(id, tab) {
+      const prev  = document.getElementById('prev-' + id);
+      const edit  = document.getElementById('edit-' + id);
+      const tPrev = document.getElementById('tab-prev-' + id);
+      const tEdit = document.getElementById('tab-edit-' + id);
+      if (tab === 'preview') {
+        prev.innerHTML = edit.value;          // sync từ textarea sang preview
+        prev.classList.remove('hidden');
+        edit.classList.add('hidden');
+        tPrev.classList.add('active');
+        tEdit.classList.remove('active');
+      } else {
+        edit.classList.remove('hidden');
+        prev.classList.add('hidden');
+        tPrev.classList.remove('active');
+        tEdit.classList.add('active');
+      }
+    }
+
+    // Đồng bộ preview realtime khi đang ở tab preview
+    function syncPrev(id) {
+      const prev = document.getElementById('prev-' + id);
+      if (!prev.classList.contains('hidden')) {
+        prev.innerHTML = document.getElementById('edit-' + id).value;
+      }
+    }
+
+    // Lấy nội dung hiện tại (từ textarea)
+    function getDesc(id) { return document.getElementById('edit-' + id).value; }
+
+    // Set nội dung mới vào cả preview lẫn textarea
+    function setDesc(id, html) {
+      document.getElementById('edit-' + id).value    = html;
+      document.getElementById('prev-' + id).innerHTML = html;
+    }
+
+    // ── Regenerate (AJAX) ───────────────────────────────────
+    async function regenerate(productId) {
+      const btn    = document.getElementById('regen-' + productId);
+      const status = document.getElementById('status-' + productId);
+      btn.disabled = true;
+      btn.textContent = '⏳ Đang viết lại...';
+      status.innerHTML = '<span class="status-badge pending">⏳ Đang generate...</span>';
+
+      try {
+        const res  = await fetch('/regenerate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          setDesc(productId, data.description);
+          status.innerHTML = '<span class="status-badge success">✓ Đã viết lại</span>';
+          document.getElementById('pub-' + productId).disabled = false;
+        } else {
+          status.innerHTML = `<span class="status-badge error">✗ ${data.error || 'Lỗi'}</span>`;
+        }
+      } catch (e) {
+        status.innerHTML = `<span class="status-badge error">✗ Lỗi mạng</span>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔄 Viết lại';
+      }
+    }
+
+    // ── Publish 1 sản phẩm (AJAX) ──────────────────────────
+    async function publishOne(productId) {
+      const btn  = document.getElementById('pub-' + productId);
+      const desc = getDesc(productId);
+      if (!desc.trim()) { showRes(productId, false, 'Mô tả đang trống.'); return; }
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Publishing...';
+      document.getElementById('pub-res-' + productId).classList.add('hidden');
+
+      try {
+        const res  = await fetch('/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId, description: desc }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          showRes(productId, true, data.message || '✓ Publish thành công!');
+          document.getElementById('status-' + productId).innerHTML =
+            '<span class="status-badge published">✓ Đã publish</span>';
+        } else {
+          showRes(productId, false, data.error || 'Publish thất bại.');
+        }
+      } catch (e) {
+        showRes(productId, false, 'Lỗi mạng: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🚀 Publish';
+      }
+    }
+
+    function showRes(id, ok, msg) {
+      const el = document.getElementById('pub-res-' + id);
+      el.className = 'publish-result ' + (ok ? 'pub-success' : 'pub-error');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+
+    // ── Publish tất cả ──────────────────────────────────────
+    async function publishAll() {
+      const btn = document.getElementById('pub-all-btn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Đang publish tất cả...';
+
+      let ok = 0, fail = 0;
+      const cards = document.querySelectorAll('.gen-card');
+
+      for (const card of cards) {
+        const id  = card.id.replace('card-', '');
+        const pub = document.getElementById('pub-' + id);
+        if (pub && !pub.disabled) {
+          const desc = getDesc(id);
+          if (!desc.trim()) continue;
+          try {
+            const res  = await fetch('/publish', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ productId: id, description: desc }),
+            });
+            const data = await res.json();
+            data.success ? (showRes(id, true, '✓ ' + (data.message || 'OK')), ok++) : (showRes(id, false, '✗ ' + data.error), fail++);
+          } catch (e) { showRes(id, false, '✗ Lỗi mạng'); fail++; }
+          await new Promise(r => setTimeout(r, 400)); // tránh rate limit
+        }
+      }
+
+      const gm = document.getElementById('global-msg');
+      gm.className  = 'alert mb-3 ' + (fail === 0 ? 'alert-success' : 'alert-warning');
+      gm.textContent = `✓ Thành công: ${ok}${fail > 0 ? ` | ✗ Thất bại: ${fail}` : ''}`;
+      gm.classList.remove('hidden');
+      gm.scrollIntoView({ behavior: 'smooth' });
+
+      btn.disabled = false;
+      btn.textContent = '🚀 Publish tất cả (' + cards.length + ')';
+    }
+  </script>
+</body>
+</html>

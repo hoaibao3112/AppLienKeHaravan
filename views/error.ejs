@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lỗi – Haravan AI Writer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/public/style.css" />
+</head>
+<body class="auth-page">
+  <div class="bg-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+  <div class="auth-container" style="max-width: 560px;">
+    <div class="brand">
+      <div class="brand-icon">✦</div>
+      <div class="brand-text">
+        <h1>Haravan <span class="gradient-text">AI Writer</span></h1>
+      </div>
+    </div>
+    <div class="card">
+      <div class="error-icon-big">⚠️</div>
+      <h2 class="error-title"><%= error %></h2>
+      <% if (details) { %>
+        <pre class="error-details"><%= typeof details === 'string' ? details : JSON.stringify(details, null, 2) %></pre>
+      <% } %>
+      <div class="error-actions">
+        <a href="/" class="btn btn-primary">← Quay lại trang chủ</a>
+        <a href="/products" class="btn btn-ghost">Danh sách sản phẩm</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
